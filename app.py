@@ -14,9 +14,9 @@ try:
 except ModuleNotFoundError:
     EDGE_TTS_AVAILABLE = False
     st.warning("""
-    ⚠️ **Audio feature disabled** – `edge-tts` module not found.  
-    To enable pronunciation audio, add a `requirements.txt` file with:
-    Then redeploy. The rest of the app works fine.
+    ⚠️ **Función de audio deshabilitada** – módulo `edge-tts` no encontrado.  
+    Para activar la pronunciación, agrega un archivo `requirements.txt` con:
+    Luego redepliega. El resto de la app funciona perfectamente.
 """)
 # -----------------------------------
 
@@ -70,26 +70,26 @@ st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
 set_colorful_style()
-st.title("🔐 Login Required")
+st.title("🔐 Acceso Requerido")
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     show_logo()
     st.markdown("<h2 style='text-align: center;'>Let's Learn Spanish with Gesner</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #FFD700;'>Book 1 – Lessons 1 to 20</p>", unsafe_allow_html=True)
-    password_input = st.text_input("Enter password to access", type="password")
-    if st.button("Login"):
+    st.markdown("<p style='text-align: center; color: #FFD700;'>Libro 1 – Lecciones 1 a 20</p>", unsafe_allow_html=True)
+    password_input = st.text_input("Ingresa la contraseña para acceder", type="password")
+    if st.button("Ingresar"):
         if password_input == "20082010":
             st.session_state.authenticated = True
             st.rerun()
         else:
-            st.error("Incorrect password. Access denied.")
+            st.error("Contraseña incorrecta. Acceso denegado.")
 st.stop()
 
 set_colorful_style()
 st.markdown("""
 <div class="main-header">
 <h1>📘 Let's Learn Spanish with Gesner</h1>
-<p>Book 1 – 20 lecciones interactivas | Conversaciones cotidianas | Vocabulario | Gramática | Pronunciación | Cuestionarios</p>
+<p>Libro 1 – 20 lecciones interactivas | Conversaciones cotidianas | Vocabulario | Gramática | Pronunciación | Cuestionarios</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -118,7 +118,9 @@ if st.button("🚪 Cerrar sesión", use_container_width=True):
     st.session_state.authenticated = False
     st.rerun()
 
-# Lesson data (same as before)
+# ------------------------------
+# TEMAS DE LAS 20 LECCIONES (español)
+# ------------------------------
 temas = [
 "Presentarse", "Rutina diaria", "En el supermercado", "Pedir comida", "Preguntar direcciones",
 "Hablar de la familia", "En el consultorio médico", "Entrevista de trabajo", "Planear un viaje", "Clima y estaciones",
@@ -164,7 +166,7 @@ return [
     f"Entender {tema} es muy útil."
 ]
 
-def generar_preguntas_cuestionario(tema, textos_conv):
+def generar_preguntas_cuestionario(tema):
 return [
     {"pregunta": "¿Cuál es el tema principal de esta lección?", "opciones": [tema, "Deportes", "Música", "Películas"], "respuesta": tema},
     {"pregunta": "¿Qué palabra significa 'dar las gracias'?", "opciones": ["Por favor", "Lo siento", "Gracias", "Disculpe"], "respuesta": "Gracias"},
@@ -182,7 +184,7 @@ return {
     "vocabulario": generar_vocabulario(tema),
     "gramatica": generar_reglas_gramaticales(tema),
     "pronunciacion": generar_oraciones_pronunciacion(tema),
-    "cuestionario": generar_preguntas_cuestionario(tema, None)
+    "cuestionario": generar_preguntas_cuestionario(tema)
 }
 
 datos_leccion = obtener_datos_leccion(lesson_number)
@@ -190,10 +192,10 @@ st.markdown(f"## 📖 Lección {lesson_number}: {datos_leccion['tema']}")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["💬 Conversaciones", "📚 Vocabulario", "📖 Gramática", "🎧 Pronunciación", "❓ Cuestionario"])
 
-# Audio function (safe)
+# Función segura para reproducir audio
 def reproducir_audio(texto, key):
 if not EDGE_TTS_AVAILABLE:
-    st.info("🔇 Audio not available – install edge-tts to enable.")
+    st.info("🔇 Audio no disponible – instala edge-tts para activarlo.")
     return
 if st.button(f"🔊 Escuchar audio", key=key):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
@@ -243,7 +245,8 @@ if f"quiz_answers_{lesson_number}" not in st.session_state:
 puntaje = 0
 for q_idx, q in enumerate(datos_leccion["cuestionario"]):
     st.markdown(f"**{q_idx+1}. {q['pregunta']}**")
-    respuesta = st.radio("Elige una respuesta:", q["opciones"], key=f"quiz_{lesson_number}_{q_idx}", label_visibility="hidden")
+    # Usamos un label no vacío pero oculto para evitar advertencias
+    respuesta = st.radio(" ", q["opciones"], key=f"quiz_{lesson_number}_{q_idx}", label_visibility="hidden")
     st.session_state[f"quiz_answers_{lesson_number}"][q_idx] = respuesta
     if respuesta == q["respuesta"]:
         puntaje += 1
