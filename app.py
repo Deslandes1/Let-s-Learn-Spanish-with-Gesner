@@ -15,8 +15,7 @@ except ModuleNotFoundError:
     EDGE_TTS_AVAILABLE = False
     st.warning("""
     ⚠️ **Función de audio deshabilitada** – módulo `edge-tts` no encontrado.  
-    Para activar la pronunciación, agrega un archivo `requirements.txt` con:
-    Luego redepliega. El resto de la app funciona perfectamente.
+    Para activar la pronunciación, agrega un archivo `requirements.txt` con:Luego redepliega. El resto de la app funciona perfectamente.
 """)
 # -----------------------------------
 
@@ -25,27 +24,115 @@ st.set_page_config(page_title="Let's Learn Spanish with Gesner", layout="wide")
 def set_colorful_style():
 st.markdown("""
     <style>
-    .stApp { background: linear-gradient(135deg, #1a0b2e, #2d1b4e, #1a0b2e); }
-    .main-header { background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb); padding: 1.5rem; border-radius: 20px; text-align: center; margin-bottom: 1rem; }
-    .main-header h1 { color: white; text-shadow: 2px 2px 4px #000000; font-size: 2.5rem; margin: 0; }
-    .main-header p { color: #fff5cc; font-size: 1.2rem; margin: 0; }
-    html, body, .stApp, .stMarkdown, .stText, .stRadio label, .stSelectbox label, .stTextInput label, .stButton button, .stTitle, .stSubheader, .stHeader, .stCaption, .stAlert, .stException, .stCodeBlock, .stDataFrame, .stTable, .stTabs [role="tab"], .stTabs [role="tablist"] button, .stExpander, .stProgress > div, .stMetric label, .stMetric value, div, p, span, pre, code, .element-container, .stTextArea label, .stText p, .stText div, .stText span, .stText code { color: white !important; }
-    .stText { color: white !important; font-size: 1rem; background: transparent !important; }
-    .stTabs [role="tab"] { color: white !important; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 0 2px; }
-    .stTabs [role="tab"][aria-selected="true"] { background: rgba(255,255,255,0.3); color: white !important; }
-    .stRadio [role="radiogroup"] label { background: rgba(255,255,255,0.15); border-radius: 10px; padding: 0.3rem; margin: 0.2rem 0; color: white !important; }
-    .stButton button { background-color: #ff6b6b; color: white; border-radius: 30px; font-weight: bold; }
-    .stButton button:hover { background-color: #feca57; color: black; }
-    section[data-testid="stSidebar"] { background: linear-gradient(135deg, #1a0b2e, #2d1b4e); }
-    section[data-testid="stSidebar"] .stMarkdown, section[data-testid="stSidebar"] .stText, section[data-testid="stSidebar"] label { color: white !important; }
-    section[data-testid="stSidebar"] .stSelectbox label { color: white !important; }
-    section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] { background-color: #2d1b4e; border: 1px solid #ffcc00; border-radius: 10px; }
-    section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] div { color: white !important; }
-    section[data-testid="stSidebar"] .stSelectbox svg { fill: white; }
-    section[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] span { color: white !important; }
-    div[data-baseweb="popover"] ul { background-color: #2d1b4e; border: 1px solid #ffcc00; }
-    div[data-baseweb="popover"] li { color: white !important; background-color: #2d1b4e; }
-    div[data-baseweb="popover"] li:hover { background-color: #ff6b6b; }
+    /* Overall app background - purple gradient */
+    .stApp {
+        background: linear-gradient(135deg, #1a0b2e, #2d1b4e, #1a0b2e);
+    }
+    /* Main header (colorful) */
+    .main-header {
+        background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb);
+        padding: 1.5rem;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 1rem;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    .main-header h1 {
+        color: white;
+        text-shadow: 2px 2px 4px #000000;
+        font-size: 2.5rem;
+        margin: 0;
+    }
+    .main-header p {
+        color: #fff5cc;
+        font-size: 1.2rem;
+        margin: 0;
+    }
+    /* Force ALL text to white everywhere */
+    html, body, .stApp, .stMarkdown, .stText, .stRadio label, .stSelectbox label,
+    .stTextInput label, .stButton button, .stTitle, .stSubheader, .stHeader,
+    .stCaption, .stAlert, .stException, .stCodeBlock, .stDataFrame, .stTable,
+    .stTabs [role="tab"], .stTabs [role="tablist"] button, .stExpander,
+    .stProgress > div, .stMetric label, .stMetric value,
+    div, p, span, pre, code, .element-container, .stTextArea label,
+    .stText p, .stText div, .stText span, .stText code {
+        color: white !important;
+    }
+    /* Specifically for conversation text (st.text) */
+    .stText {
+        color: white !important;
+        font-size: 1rem;
+        background: transparent !important;
+    }
+    /* Tabs text (white) */
+    .stTabs [role="tab"] {
+        color: white !important;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        margin: 0 2px;
+    }
+    .stTabs [role="tab"][aria-selected="true"] {
+        background: rgba(255,255,255,0.3);
+        color: white !important;
+    }
+    /* Quiz radio button options */
+    .stRadio [role="radiogroup"] label {
+        background: rgba(255,255,255,0.15);
+        border-radius: 10px;
+        padding: 0.3rem;
+        margin: 0.2rem 0;
+        color: white !important;
+    }
+    /* Buttons */
+    .stButton button {
+        background-color: #ff6b6b;
+        color: white;
+        border-radius: 30px;
+        font-weight: bold;
+    }
+    .stButton button:hover {
+        background-color: #feca57;
+        color: black;
+    }
+    /* Sidebar (already dark, but ensure text white) */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(135deg, #1a0b2e, #2d1b4e);
+    }
+    section[data-testid="stSidebar"] .stMarkdown,
+    section[data-testid="stSidebar"] .stText,
+    section[data-testid="stSidebar"] label {
+        color: white !important;
+    }
+    /* ----- FIX: Make sidebar lesson selector (selectbox) visible ----- */
+    section[data-testid="stSidebar"] .stSelectbox label {
+        color: white !important;
+    }
+    section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {
+        background-color: #2d1b4e;
+        border: 1px solid #ffcc00;
+        border-radius: 10px;
+    }
+    section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] div {
+        color: white !important;
+    }
+    section[data-testid="stSidebar"] .stSelectbox svg {
+        fill: white;
+    }
+    section[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] span {
+        color: white !important;
+    }
+    /* Dropdown menu items (options) */
+    div[data-baseweb="popover"] ul {
+        background-color: #2d1b4e;
+        border: 1px solid #ffcc00;
+    }
+    div[data-baseweb="popover"] li {
+        color: white !important;
+        background-color: #2d1b4e;
+    }
+    div[data-baseweb="popover"] li:hover {
+        background-color: #ff6b6b;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -267,3 +354,4 @@ st.markdown("""
 
 El Libro 2 contendrá conversaciones más avanzadas, vocabulario, gramática y simulaciones de la vida real.
 """)
+    
