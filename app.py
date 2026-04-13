@@ -5,6 +5,10 @@ import tempfile
 import base64
 import os
 import random
+import nest_asyncio
+
+# Apply nest_asyncio to allow nested event loops (required for edge_tts inside Streamlit)
+nest_asyncio.apply()
 
 # ------------------------------
 # PAGE CONFIG & LOGIN
@@ -298,14 +302,25 @@ st.markdown(f"## 📖 Lección {lesson_number}: {datos_leccion['tema']}")
 # Tabs for different sections
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["💬 Conversaciones", "📚 Vocabulario", "📖 Gramática", "🎧 Pronunciación", "❓ Cuestionario"])
 
-# Helper to generate audio from text (Spanish voice)
+# Helper to generate audio from text (Spanish voice) – async safe for Streamlit
 async def texto_a_audio(texto, archivo):
     await edge_tts.Communicate(texto, "es-ES-AlvaroNeural").save(archivo)
 
 def reproducir_audio(texto, key):
     if st.button(f"🔊 Escuchar audio", key=key):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-            asyncio.run(texto_a_audio(texto, tmp.name))
+            # Run the async function safely in a new event loop (nest_asyncio already applied)
+            try:
+                asyncio.get_running_loop()
+                # If inside a running loop, create a new loop in a thread
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(asyncio.run, texto_a_audio(texto, tmp.name))
+                    future.result()
+            except RuntimeError:
+                # No running loop, we can use asyncio.run directly
+                asyncio.run(texto_a_audio(texto, tmp.name))
+            
             with open(tmp.name, "rb") as f:
                 audio_bytes = f.read()
                 b64 = base64.b64encode(audio_bytes).decode()
