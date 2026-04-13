@@ -245,7 +245,6 @@ if f"quiz_answers_{lesson_number}" not in st.session_state:
 puntaje = 0
 for q_idx, q in enumerate(datos_leccion["cuestionario"]):
     st.markdown(f"**{q_idx+1}. {q['pregunta']}**")
-    # Usamos un label no vacío pero oculto para evitar advertencias
     respuesta = st.radio(" ", q["opciones"], key=f"quiz_{lesson_number}_{q_idx}", label_visibility="hidden")
     st.session_state[f"quiz_answers_{lesson_number}"][q_idx] = respuesta
     if respuesta == q["respuesta"]:
