@@ -5,14 +5,14 @@ import base64
 import os
 import random
 
+# ----- Audio Setup Fix -----
 try:
     import edge_tts
-    EDGE_TTS_AVAILABLE = True
     import nest_asyncio
     nest_asyncio.apply()
-except ModuleNotFoundError:
+    EDGE_TTS_AVAILABLE = True
+except (ModuleNotFoundError, ImportError):
     EDGE_TTS_AVAILABLE = False
-    st.warning("Audio disabled: install edge-tts")
 
 st.set_page_config(page_title="Let's Learn Spanish with Gesner", layout="wide")
 
@@ -182,25 +182,34 @@ st.markdown(f"## 📖 Lección {lesson_number}: {datos_leccion['tema']}")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["💬 Conversaciones", "📚 Vocabulario", "📖 Gramática", "🎧 Pronunciación", "❓ Cuestionario"])
 
+# ----- FIXED AUDIO FUNCTION -----
+async def text_to_speech(text, output_path):
+    communicate = edge_tts.Communicate(text, "es-ES-AlvaroNeural")
+    await communicate.save(output_path)
+
 def reproducir_audio(texto, key):
     if not EDGE_TTS_AVAILABLE:
-        st.info("🔇 Audio no disponible – instala edge-tts para activarlo.")
+        st.info("🔇 Audio disabled: run 'pip install edge-tts nest-asyncio'")
         return
-    if st.button(f"🔊 Escuchar audio", key=key):
+    
+    if st.button(f"🔊 Escuchar", key=key):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
             try:
-                asyncio.get_running_loop()
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(asyncio.run, edge_tts.Communicate(texto, "es-ES-AlvaroNeural").save(tmp.name))
-                    future.result()
-            except RuntimeError:
-                asyncio.run(edge_tts.Communicate(texto, "es-ES-AlvaroNeural").save(tmp.name))
-            with open(tmp.name, "rb") as f:
-                audio_bytes = f.read()
-                b64 = base64.b64encode(audio_bytes).decode()
-                st.markdown(f'<audio controls src="data:audio/mp3;base64,{b64}" autoplay style="width: 100%;"></audio>', unsafe_allow_html=True)
-            os.unlink(tmp.name)
+                # Runs the async function in the current thread's loop
+                asyncio.run(text_to_speech(texto, tmp.name))
+                
+                with open(tmp.name, "rb") as f:
+                    audio_bytes = f.read()
+                    b64 = base64.b64encode(audio_bytes).decode()
+                    st.markdown(
+                        f'<audio controls src="data:audio/mp3;base64,{b64}" autoplay style="width: 100%;"></audio>', 
+                        unsafe_allow_html=True
+                    )
+            except Exception as e:
+                st.error(f"Audio error: {e}")
+            finally:
+                if os.path.exists(tmp.name):
+                    os.unlink(tmp.name)
 
 with tab1:
     for i, conv in enumerate(datos_leccion["conversaciones"], 1):
@@ -240,7 +249,7 @@ with tab5:
             puntaje += 1
     if st.button("Verificar respuestas", key=f"check_{lesson_number}"):
         st.success(f"Obtuviste {puntaje} de {len(datos_leccion['cuestionario'])} correctas!")
-        if puntaje == len(datos_leccion["cuestionario"]):
+        if puntaje == len(datos_leccion['cuestionario']):
             st.balloons()
             st.markdown("🎉 ¡Perfecto! Has dominado esta lección.")
 
