@@ -6,6 +6,7 @@ import os
 import random
 
 # ----- Audio Setup Fix -----
+# We must apply nest_asyncio before any other imports that might use asyncio
 try:
     import edge_tts
     import nest_asyncio
@@ -182,10 +183,10 @@ st.markdown(f"## 📖 Lección {lesson_number}: {datos_leccion['tema']}")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["💬 Conversaciones", "📚 Vocabulario", "📖 Gramática", "🎧 Pronunciación", "❓ Cuestionario"])
 
-# ----- FIXED AUDIO FUNCTION -----
-async def text_to_speech(text, output_path):
+# ----- FIXED AUDIO LOGIC -----
+async def save_speech(text, file_path):
     communicate = edge_tts.Communicate(text, "es-ES-AlvaroNeural")
-    await communicate.save(output_path)
+    await communicate.save(file_path)
 
 def reproducir_audio(texto, key):
     if not EDGE_TTS_AVAILABLE:
@@ -195,8 +196,8 @@ def reproducir_audio(texto, key):
     if st.button(f"🔊 Escuchar", key=key):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
             try:
-                # Runs the async function in the current thread's loop
-                asyncio.run(text_to_speech(texto, tmp.name))
+                # Use asyncio.run to execute the coroutine
+                asyncio.run(save_speech(texto, tmp.name))
                 
                 with open(tmp.name, "rb") as f:
                     audio_bytes = f.read()
