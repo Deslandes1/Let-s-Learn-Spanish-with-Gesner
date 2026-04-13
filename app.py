@@ -354,4 +354,3 @@ st.markdown("""
 
 El Libro 2 contendrá conversaciones más avanzadas, vocabulario, gramática y simulaciones de la vida real.
 """)
-    
