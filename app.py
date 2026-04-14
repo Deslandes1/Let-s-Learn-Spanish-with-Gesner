@@ -6,7 +6,6 @@ import os
 import random
 
 # ----- Audio Setup Fix -----
-# We must apply nest_asyncio before any other imports that might use asyncio
 try:
     import edge_tts
     import nest_asyncio
@@ -190,15 +189,13 @@ async def save_speech(text, file_path):
 
 def reproducir_audio(texto, key):
     if not EDGE_TTS_AVAILABLE:
-        st.info("🔇 Audio disabled: run 'pip install edge-tts nest-asyncio'")
+        st.info("🔇 Audio desactivado")
         return
     
-    if st.button(f"🔊 Escuchar", key=key):
+    if st.button(f"🔊", key=key):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
             try:
-                # Use asyncio.run to execute the coroutine
                 asyncio.run(save_speech(texto, tmp.name))
-                
                 with open(tmp.name, "rb") as f:
                     audio_bytes = f.read()
                     b64 = base64.b64encode(audio_bytes).decode()
@@ -207,7 +204,7 @@ def reproducir_audio(texto, key):
                         unsafe_allow_html=True
                     )
             except Exception as e:
-                st.error(f"Audio error: {e}")
+                st.error(f"Error de audio: {e}")
             finally:
                 if os.path.exists(tmp.name):
                     os.unlink(tmp.name)
@@ -227,8 +224,51 @@ with tab2:
             reproducir_audio(palabra, f"vocab_{lesson_number}_{idx}")
 
 with tab3:
+    st.subheader("💡 Reglas Gramaticales")
     for regla in datos_leccion["gramatica"]:
         st.markdown(f"- {regla}")
+    
+    st.markdown("---")
+    
+    # NEW SECTION: LO BÁSICO (THE BASICS)
+    st.subheader("🌟 Lo Básico")
+    with st.expander("🔤 El Alfabeto Español", expanded=True):
+        # Full Spanish alphabet including 'ñ'
+        alfabeto = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ"
+        cols = st.columns(7)
+        for i, letra in enumerate(alfabeto):
+            with cols[i % 7]:
+                st.write(f"### {letra}")
+                reproducir_audio(letra, f"alpha_{letra}_{lesson_number}")
+
+    with st.expander("🔢 Números (Cardinales y Ordinales)"):
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Números Cardinales**")
+            cardinales = ["Uno", "Dos", "Tres", "Diez", "Veinte", "Cien"]
+            for num in cardinales:
+                col_n, col_a = st.columns([3, 1])
+                col_n.write(num)
+                with col_a: reproducir_audio(num, f"card_{num}_{lesson_number}")
+        with c2:
+            st.markdown("**Números Ordinales**")
+            ordinales = ["Primero", "Segundo", "Tercero", "Décimo", "Vigésimo"]
+            for num in ordinales:
+                col_n, col_a = st.columns([3, 1])
+                col_n.write(num)
+                with col_a: reproducir_audio(num, f"ord_{num}_{lesson_number}")
+
+    with st.expander("🗣️ Expresiones Idiomáticas Top"):
+        modismos = [
+            {"frase": "Estar en las nubes", "significado": "Estar distraído o soñando despierto."},
+            {"phrase": "Pan comido", "significado": "Algo que es muy fácil de hacer."},
+            {"phrase": "Tomar el pelo", "significado": "Burlarse de alguien de manera amistosa o engañar."}
+        ]
+        for idx, item in enumerate(modismos):
+            st.markdown(f"**{item.get('frase') or item.get('phrase')}**")
+            st.caption(item['significado'])
+            reproducir_audio(f"{item.get('frase') or item.get('phrase')}. Significa: {item['significado']}", f"idiom_{idx}_{lesson_number}")
+            st.markdown("---")
 
 with tab4:
     st.markdown("Escucha cada oración, luego repite en voz alta.")
