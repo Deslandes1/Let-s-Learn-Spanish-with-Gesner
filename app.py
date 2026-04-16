@@ -131,7 +131,6 @@ def generar_vocabulario(tema):
     all_words = base_words[:15] + tema_words
     return all_words[:20]
 
-# ----- NEW: Fixed grammar rules with 3 examples each -----
 def obtener_reglas_gramaticales():
     return [
         {
@@ -241,7 +240,7 @@ def obtener_datos_leccion(num_leccion):
         "tema": tema,
         "conversaciones": generar_conversaciones(tema),
         "vocabulario": generar_vocabulario(tema),
-        "gramatica": obtener_reglas_gramaticales(),   # Now fixed list with examples
+        "gramatica": obtener_reglas_gramaticales(),
         "pronunciacion": generar_oraciones_pronunciacion(tema),
         "cuestionario": generar_preguntas_cuestionario(tema)
     }
@@ -251,7 +250,7 @@ st.markdown(f"## 📖 Lección {lesson_number}: {datos_leccion['tema']}")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["💬 Conversaciones", "📚 Vocabulario", "📖 Gramática", "🎧 Pronunciación", "❓ Cuestionario"])
 
-# ----- FIXED AUDIO LOGIC -----
+# ----- AUDIO FUNCTION -----
 async def save_speech(text, file_path):
     communicate = edge_tts.Communicate(text, "es-ES-AlvaroNeural")
     await communicate.save(file_path)
@@ -278,6 +277,7 @@ def reproducir_audio(texto, key):
                 if os.path.exists(tmp.name):
                     os.unlink(tmp.name)
 
+# ----- TAB 1: CONVERSACIONES -----
 with tab1:
     for i, conv in enumerate(datos_leccion["conversaciones"], 1):
         st.markdown(f"**Conversación {i}**")
@@ -285,6 +285,7 @@ with tab1:
         reproducir_audio(conv, f"conv_{lesson_number}_{i}")
         st.markdown("---")
 
+# ----- TAB 2: VOCABULARIO -----
 with tab2:
     cols = st.columns(4)
     for idx, palabra in enumerate(datos_leccion["vocabulario"]):
@@ -292,6 +293,7 @@ with tab2:
             st.markdown(f"**{palabra.capitalize()}**")
             reproducir_audio(palabra, f"vocab_{lesson_number}_{idx}")
 
+# ----- TAB 3: GRAMÁTICA -----
 with tab3:
     st.subheader("💡 Reglas Gramaticales (con ejemplos y audio)")
     for idx, item in enumerate(datos_leccion["gramatica"]):
@@ -306,8 +308,6 @@ with tab3:
         st.markdown("---")
     
     st.markdown("---")
-    
-    # NEW SECTION: LO BÁSICO (THE BASICS)
     st.subheader("🌟 Lo Básico")
     with st.expander("🔤 El Alfabeto Español", expanded=True):
         alfabeto = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ"
@@ -318,7 +318,6 @@ with tab3:
                 reproducir_audio(letra, f"alpha_{letra}_{lesson_number}")
 
     with st.expander("🔢 Números (Cardinales y Ordinales)"):
-        # Cardinal numbers 1 to 10 (numeric + written)
         st.markdown("**Números Cardinales (1 al 10)**")
         cardinales = [
             ("1", "uno"), ("2", "dos"), ("3", "tres"), ("4", "cuatro"),
@@ -332,7 +331,6 @@ with tab3:
                 reproducir_audio(palabra, f"card_{num}_{lesson_number}")
         
         st.markdown("---")
-        # Ordinal numbers 1st to 10th (numeric + written)
         st.markdown("**Números Ordinales (1º al 10º)**")
         ordinales = [
             ("1º", "primero"), ("2º", "segundo"), ("3º", "tercero"), ("4º", "cuarto"),
@@ -357,6 +355,7 @@ with tab3:
             reproducir_audio(f"{item['frase']}. Significa: {item['significado']}", f"idiom_{idx}_{lesson_number}")
             st.markdown("---")
 
+# ----- TAB 4: PRONUNCIACIÓN -----
 with tab4:
     st.markdown("Escucha cada oración, luego repite en voz alta.")
     for idx, oracion in enumerate(datos_leccion["pronunciacion"]):
@@ -364,23 +363,66 @@ with tab4:
         reproducir_audio(oracion, f"pron_{lesson_number}_{idx}")
         st.markdown("---")
 
+# ----- TAB 5: CUESTIONARIO (with audio for questions and options) -----
 with tab5:
     st.markdown("Prueba tu comprensión de esta lección.")
-    if f"quiz_answers_{lesson_number}" not in st.session_state:
-        st.session_state[f"quiz_answers_{lesson_number}"] = {}
-    puntaje = 0
-    for q_idx, q in enumerate(datos_leccion["cuestionario"]):
+    
+    # Inicializar respuestas en session state
+    quiz_key = f"quiz_answers_{lesson_number}"
+    if quiz_key not in st.session_state:
+        st.session_state[quiz_key] = {}
+    
+    preguntas = datos_leccion["cuestionario"]
+    
+    # Mostrar cada pregunta con sus opciones
+    for q_idx, q in enumerate(preguntas):
         st.markdown(f"**{q_idx+1}. {q['pregunta']}**")
-        respuesta = st.radio(" ", q["opciones"], key=f"quiz_{lesson_number}_{q_idx}", label_visibility="hidden")
-        st.session_state[f"quiz_answers_{lesson_number}"][q_idx] = respuesta
-        if respuesta == q["respuesta"]:
-            puntaje += 1
+        # Botón de audio para la pregunta
+        reproducir_audio(q['pregunta'], f"quiz_question_{lesson_number}_{q_idx}")
+        
+        # Mostrar opciones con botones de audio y selección
+        selected_option = st.session_state[quiz_key].get(q_idx, None)
+        # Usamos st.radio pero añadimos botones de audio al lado de cada etiqueta
+        # Como st.radio no permite HTML fácilmente, creamos una columna para cada opción con texto y botón
+        cols = st.columns([5, 1] * len(q['opciones']))  # alternativa: usar un bucle con st.columns
+        # Mejor: crear una lista de opciones con botones de audio en la misma línea
+        option_container = st.container()
+        with option_container:
+            for opt_idx, opt in enumerate(q['opciones']):
+                col_text, col_audio = st.columns([5, 1])
+                with col_text:
+                    # Mostrar la opción como un botón para seleccionar? No, solo texto y un botón de selección aparte.
+                    # Usamos un botón para seleccionar la opción y otro para audio.
+                    if st.button(opt, key=f"select_{lesson_number}_{q_idx}_{opt_idx}"):
+                        st.session_state[quiz_key][q_idx] = opt
+                        st.rerun()
+                with col_audio:
+                    reproducir_audio(opt, f"quiz_opt_{lesson_number}_{q_idx}_{opt_idx}")
+                st.markdown("---")  # separador entre opciones
+        # Mostrar la opción seleccionada actualmente
+        if selected_option:
+            st.success(f"Seleccionado: {selected_option}")
+        else:
+            st.info("No has seleccionado una respuesta aún. Haz clic en una opción arriba.")
+        st.markdown("---")
+    
+    # Botón para verificar respuestas
     if st.button("Verificar respuestas", key=f"check_{lesson_number}"):
-        st.success(f"Obtuviste {puntaje} de {len(datos_leccion['cuestionario'])} correctas!")
-        if puntaje == len(datos_leccion['cuestionario']):
+        puntaje = 0
+        for q_idx, q in enumerate(preguntas):
+            if st.session_state[quiz_key].get(q_idx) == q["respuesta"]:
+                puntaje += 1
+        st.success(f"Obtuviste {puntaje} de {len(preguntas)} correctas!")
+        if puntaje == len(preguntas):
             st.balloons()
             st.markdown("🎉 ¡Perfecto! Has dominado esta lección.")
+        else:
+            # Mostrar respuestas correctas
+            with st.expander("Ver respuestas correctas"):
+                for q_idx, q in enumerate(preguntas):
+                    st.write(f"{q_idx+1}. {q['pregunta']} → Respuesta correcta: {q['respuesta']}")
 
+# ----- FIN DEL LIBRO -----
 if lesson_number == 20:
     st.markdown("---")
     st.markdown("## 🎓 ¡Felicidades! Has completado el Libro 1.")
