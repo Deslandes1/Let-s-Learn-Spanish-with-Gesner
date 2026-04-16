@@ -131,21 +131,90 @@ def generar_vocabulario(tema):
     all_words = base_words[:15] + tema_words
     return all_words[:20]
 
-def generar_reglas_gramaticales(tema):
-    reglas = [
-        "1. Usa el presente simple para hechos y rutinas.",
-        "2. Usa 'ser' y 'estar' correctamente (características permanentes vs. estados temporales).",
-        "3. Usa 'tener' para expresar posesión y edad.",
-        "4. Usa 'poder' para expresar habilidad o permiso.",
-        "5. Usa 'hacer' para preguntar sobre el clima (¿Qué tiempo hace?).",
-        "6. Los adverbios de frecuencia (siempre, a veces, nunca) van antes del verbo principal.",
-        "7. Usa las preposiciones de lugar (en, sobre, debajo de) correctamente.",
-        "8. Usa 'hay' para decir que algo existe.",
-        "9. Usa 'me gustaría' para peticiones corteses.",
-        "10. Usa 'ir a' para planes futuros."
+# ----- NEW: Fixed grammar rules with 3 examples each -----
+def obtener_reglas_gramaticales():
+    return [
+        {
+            "regla": "1. Usa el presente simple para hechos y rutinas.",
+            "ejemplos": [
+                "Yo trabajo todos los días.",
+                "Ella estudia español.",
+                "El sol sale por la mañana."
+            ]
+        },
+        {
+            "regla": "2. Usa 'ser' y 'estar' correctamente (características permanentes vs. estados temporales).",
+            "ejemplos": [
+                "Ella es inteligente. (permanente)",
+                "Hoy estoy cansado. (temporal)",
+                "La mesa es de madera. (permanente)"
+            ]
+        },
+        {
+            "regla": "3. Usa 'tener' para expresar posesión y edad.",
+            "ejemplos": [
+                "Tengo un coche nuevo.",
+                "Ellos tienen dos hijos.",
+                "Mi hermana tiene 25 años."
+            ]
+        },
+        {
+            "regla": "4. Usa 'poder' para expresar habilidad o permiso.",
+            "ejemplos": [
+                "Puedo hablar español.",
+                "¿Puedo abrir la ventana?",
+                "Ella no puede venir hoy."
+            ]
+        },
+        {
+            "regla": "5. Usa 'hacer' para preguntar sobre el clima (¿Qué tiempo hace?).",
+            "ejemplos": [
+                "¿Qué tiempo hace hoy?",
+                "Hace mucho calor en verano.",
+                "Hace viento en la playa."
+            ]
+        },
+        {
+            "regla": "6. Los adverbios de frecuencia (siempre, a veces, nunca) van antes del verbo principal.",
+            "ejemplos": [
+                "Siempre desayuno a las 8.",
+                "A veces voy al cine.",
+                "Nunca llego tarde."
+            ]
+        },
+        {
+            "regla": "7. Usa las preposiciones de lugar (en, sobre, debajo de) correctamente.",
+            "ejemplos": [
+                "El libro está en la mesa.",
+                "La lámpara está sobre la mesa.",
+                "El gato está debajo de la silla."
+            ]
+        },
+        {
+            "regla": "8. Usa 'hay' para decir que algo existe.",
+            "ejemplos": [
+                "Hay un restaurante cerca.",
+                "Hay muchas personas aquí.",
+                "¿Hay leche en la nevera?"
+            ]
+        },
+        {
+            "regla": "9. Usa 'me gustaría' para peticiones corteses.",
+            "ejemplos": [
+                "Me gustaría un café, por favor.",
+                "Me gustaría visitar España.",
+                "Me gustaría aprender más."
+            ]
+        },
+        {
+            "regla": "10. Usa 'ir a' para planes futuros.",
+            "ejemplos": [
+                "Voy a viajar mañana.",
+                "Ellos van a comer pizza.",
+                "¿Vas a estudiar esta noche?"
+            ]
+        }
     ]
-    random.shuffle(reglas)
-    return reglas
 
 def generar_oraciones_pronunciacion(tema):
     return [
@@ -172,7 +241,7 @@ def obtener_datos_leccion(num_leccion):
         "tema": tema,
         "conversaciones": generar_conversaciones(tema),
         "vocabulario": generar_vocabulario(tema),
-        "gramatica": generar_reglas_gramaticales(tema),
+        "gramatica": obtener_reglas_gramaticales(),   # Now fixed list with examples
         "pronunciacion": generar_oraciones_pronunciacion(tema),
         "cuestionario": generar_preguntas_cuestionario(tema)
     }
@@ -224,16 +293,23 @@ with tab2:
             reproducir_audio(palabra, f"vocab_{lesson_number}_{idx}")
 
 with tab3:
-    st.subheader("💡 Reglas Gramaticales")
-    for regla in datos_leccion["gramatica"]:
-        st.markdown(f"- {regla}")
+    st.subheader("💡 Reglas Gramaticales (con ejemplos y audio)")
+    for idx, item in enumerate(datos_leccion["gramatica"]):
+        st.markdown(f"**{item['regla']}**")
+        reproducir_audio(item['regla'], f"gram_rule_{lesson_number}_{idx}")
+        st.markdown("**Ejemplos:**")
+        for ej_idx, ej in enumerate(item['ejemplos']):
+            col_ej, col_btn = st.columns([4, 1])
+            col_ej.write(f"• {ej}")
+            with col_btn:
+                reproducir_audio(ej, f"gram_ex_{lesson_number}_{idx}_{ej_idx}")
+        st.markdown("---")
     
     st.markdown("---")
     
     # NEW SECTION: LO BÁSICO (THE BASICS)
     st.subheader("🌟 Lo Básico")
     with st.expander("🔤 El Alfabeto Español", expanded=True):
-        # Full Spanish alphabet including 'ñ'
         alfabeto = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ"
         cols = st.columns(7)
         for i, letra in enumerate(alfabeto):
@@ -242,32 +318,43 @@ with tab3:
                 reproducir_audio(letra, f"alpha_{letra}_{lesson_number}")
 
     with st.expander("🔢 Números (Cardinales y Ordinales)"):
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**Números Cardinales**")
-            cardinales = ["Uno", "Dos", "Tres", "Diez", "Veinte", "Cien"]
-            for num in cardinales:
-                col_n, col_a = st.columns([3, 1])
-                col_n.write(num)
-                with col_a: reproducir_audio(num, f"card_{num}_{lesson_number}")
-        with c2:
-            st.markdown("**Números Ordinales**")
-            ordinales = ["Primero", "Segundo", "Tercero", "Décimo", "Vigésimo"]
-            for num in ordinales:
-                col_n, col_a = st.columns([3, 1])
-                col_n.write(num)
-                with col_a: reproducir_audio(num, f"ord_{num}_{lesson_number}")
+        # Cardinal numbers 1 to 10 (numeric + written)
+        st.markdown("**Números Cardinales (1 al 10)**")
+        cardinales = [
+            ("1", "uno"), ("2", "dos"), ("3", "tres"), ("4", "cuatro"),
+            ("5", "cinco"), ("6", "seis"), ("7", "siete"), ("8", "ocho"),
+            ("9", "nueve"), ("10", "diez")
+        ]
+        cols_card = st.columns(5)
+        for idx, (num, palabra) in enumerate(cardinales):
+            with cols_card[idx % 5]:
+                st.write(f"**{num}** – {palabra}")
+                reproducir_audio(palabra, f"card_{num}_{lesson_number}")
+        
+        st.markdown("---")
+        # Ordinal numbers 1st to 10th (numeric + written)
+        st.markdown("**Números Ordinales (1º al 10º)**")
+        ordinales = [
+            ("1º", "primero"), ("2º", "segundo"), ("3º", "tercero"), ("4º", "cuarto"),
+            ("5º", "quinto"), ("6º", "sexto"), ("7º", "séptimo"), ("8º", "octavo"),
+            ("9º", "noveno"), ("10º", "décimo")
+        ]
+        cols_ord = st.columns(5)
+        for idx, (num, palabra) in enumerate(ordinales):
+            with cols_ord[idx % 5]:
+                st.write(f"**{num}** – {palabra}")
+                reproducir_audio(palabra, f"ord_{num}_{lesson_number}")
 
     with st.expander("🗣️ Expresiones Idiomáticas Top"):
         modismos = [
             {"frase": "Estar en las nubes", "significado": "Estar distraído o soñando despierto."},
-            {"phrase": "Pan comido", "significado": "Algo que es muy fácil de hacer."},
-            {"phrase": "Tomar el pelo", "significado": "Burlarse de alguien de manera amistosa o engañar."}
+            {"frase": "Pan comido", "significado": "Algo que es muy fácil de hacer."},
+            {"frase": "Tomar el pelo", "significado": "Burlarse de alguien de manera amistosa o engañar."}
         ]
         for idx, item in enumerate(modismos):
-            st.markdown(f"**{item.get('frase') or item.get('phrase')}**")
+            st.markdown(f"**{item['frase']}**")
             st.caption(item['significado'])
-            reproducir_audio(f"{item.get('frase') or item.get('phrase')}. Significa: {item['significado']}", f"idiom_{idx}_{lesson_number}")
+            reproducir_audio(f"{item['frase']}. Significa: {item['significado']}", f"idiom_{idx}_{lesson_number}")
             st.markdown("---")
 
 with tab4:
